@@ -1,3 +1,5 @@
+/* MapPage.css - Diecast Theme */
+
 /* Reset default margins and padding */
 * {
   margin: 0;
@@ -18,24 +20,59 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2c2c2c 100%);
 }
 
 .map-page-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  background-color: #f4f4f4;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2c2c2c 100%);
   overflow: hidden;
+  position: relative;
+}
+
+.map-page-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 20% 80%, rgba(231, 76, 60, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(243, 156, 18, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .page-title {
   text-align: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #e74c3c, #f39c12, #e74c3c);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1.5rem;
   flex-shrink: 0;
+  text-shadow: 0 0 30px rgba(231, 76, 60, 0.5);
+  animation: gradientShift 3s ease-in-out infinite;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* Container principal da página */
@@ -43,173 +80,411 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 20px;
-  height: calc(100vh - 8rem); /* Account for header + title + padding */
+  gap: 30px;
+  height: calc(100vh - 10rem);
   width: 100%;
   flex-wrap: nowrap;
   box-sizing: border-box;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 /* Mapa */
 .map-container {
   flex: 1 1 65%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   position: relative;
   min-width: 0;
+  border: 3px solid #e74c3c;
+}
+
+.map-container::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #e74c3c, #f39c12, #e74c3c, #f39c12);
+  background-size: 400% 400%;
+  border-radius: 20px;
+  z-index: -1;
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+@keyframes borderGlow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* Ajuste do Leaflet */
 .map-container .leaflet-container {
   width: 100% !important;
   height: 100% !important;
-  border-radius: 10px;
+  border-radius: 17px;
 }
 
-/* Formulário */
+/* Formulário - CHANGED TO ORANGE ONLY */
 .form-container {
-  flex: 0 0 400px;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex: 0 0 450px;
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 50%, #d35400 100%);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   box-sizing: border-box;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  border: 2px solid rgba(231, 76, 60, 0.3);
+  backdrop-filter: blur(20px);
+  position: relative;
 }
 
-/* Cabeçalho do formulário */
+.form-container::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #e74c3c, #f39c12, #e74c3c, #f39c12);
+  background-size: 400% 400%;
+  border-radius: 20px;
+  z-index: -1;
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* Cabeçalho do formulário - CHANGED TO STATIC WHITE */
 .form-container h2 {
   text-align: center;
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 2rem;
   flex-shrink: 0;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 /* Grupos de campos do formulário */
 .form-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .required {
-  color: #dc2626;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 /* Estilo para os campos de entrada */
 .input-field,
 .select-field {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  color: #ffffff;
   box-sizing: border-box;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
   width: 100%;
+  backdrop-filter: blur(10px);
+  font-weight: 500;
+  position: relative;
+}
+
+.input-field::placeholder,
+.select-field::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Efeito de foco nos campos */
 .input-field:focus,
 .select-field:focus {
-  border-color: #007bff;
+  border-color: #ffffff;
   outline: none;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+}
+
+/* Enhanced fade effect for input fields */
+.input-field::before,
+.select-field::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-radius: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.input-field:hover::before,
+.select-field:hover::before {
+  opacity: 1;
 }
 
 /* Field hints */
 .field-hint {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 4px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 0.5rem;
+  font-style: italic;
 }
 
 /* Loading and no data messages */
 .loading-message {
   text-align: center;
-  color: #6b7280;
-  font-size: 14px;
-  padding: 12px;
-  background-color: #f9fafb;
-  border-radius: 4px;
-  margin-top: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-radius: 15px;
+  margin-top: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-message::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .no-brands-message {
   text-align: center;
-  color: #9ca3af;
-  font-size: 14px;
-  padding: 12px;
-  background-color: #f9fafb;
-  border-radius: 4px;
-  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  border-radius: 15px;
+  margin-top: 0.5rem;
+  font-style: italic;
+  position: relative;
+  overflow: hidden;
+}
+
+.no-brands-message::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 3s infinite;
+}
+
+.brands-error {
+  margin-top: 0.5rem;
+}
+
+.retry-button {
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.retry-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.retry-button:hover::before {
+  left: 100%;
+}
+
+.retry-button:hover {
+  background: linear-gradient(145deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5);
 }
 
 /* Checkbox groups */
 .checkbox-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.checkbox-group::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.checkbox-group:hover::before {
+  opacity: 1;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: normal;
+  gap: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  padding: 0.75rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.checkbox-label::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.checkbox-label:hover::before {
+  left: 100%;
 }
 
 .checkbox-label:hover {
-  background-color: #f3f4f6;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  transform: translateX(5px);
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   cursor: pointer;
+  accent-color: #ffffff;
 }
 
 .checkbox-text {
-  font-size: 14px;
-  color: #374151;
+  font-size: 0.9rem;
+  color: #ffffff;
+  font-weight: 500;
 }
 
 /* Estilo para o botão */
 .submit-button {
-  padding: 12px 20px;
-  background-color: #007bff;
+  padding: 1.25rem 2rem;
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 15px;
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 2rem;
   flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 32px rgba(231, 76, 60, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.submit-button:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background: linear-gradient(145deg, #c0392b, #a93226);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 50px rgba(231, 76, 60, 0.5);
 }
 
 /* Responsividade para telas menores */
@@ -217,76 +492,125 @@ body {
   .map-page-container {
     flex-direction: column;
     align-items: stretch;
-    gap: 15px;
-    padding: 15px;
+    gap: 20px;
+    padding: 0;
   }
 
   .map-container {
-    height: calc(50vh - 30px);
+    height: calc(50vh - 40px);
     flex: none;
   }
 
   .form-container {
     flex: none;
-    height: calc(50vh - 30px);
+    height: calc(50vh - 40px);
     width: 100%;
   }
 }
 
 @media (max-width: 768px) {
+  .map-page-content {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
+
   .map-page-container {
-    padding: 10px;
-    gap: 10px;
+    gap: 15px;
   }
 
   .map-container {
-    height: calc(45vh - 20px);
+    height: calc(45vh - 30px);
   }
 
   .form-container {
-    height: calc(55vh - 20px);
-    padding: 15px;
+    height: calc(55vh - 30px);
+    padding: 1.5rem;
+  }
+
+  .form-container h2 {
+    font-size: 1.5rem;
   }
 
   .checkbox-group {
-    max-height: 120px;
-    overflow-y: auto;
+    max-height: 150px;
   }
 }
 
 .error-message {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(192, 57, 43, 0.3));
+  border: 2px solid #e74c3c;
+  color: #ffffff;
+  padding: 1rem;
+  border-radius: 15px;
   margin-bottom: 1rem;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(231, 76, 60, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.error-message::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
 }
 
 .success-message {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #16a34a;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.3));
+  border: 2px solid #2ecc71;
+  color: #ffffff;
+  padding: 1rem;
+  border-radius: 15px;
   margin-bottom: 1rem;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(46, 204, 113, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.success-message::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
 }
 
 .submit-button:disabled {
-  background-color: #9ca3af;
+  background: linear-gradient(145deg, rgba(231, 76, 60, 0.5), rgba(192, 57, 43, 0.5));
   cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
 }
 
 .input-field:disabled,
 .select-field:disabled {
-  background-color: #f3f4f6;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .checkbox-label input[type="checkbox"]:disabled {
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Loading animation */
@@ -296,10 +620,29 @@ body {
     opacity: 1;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.6;
   }
 }
 
-.loading-message {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Scrollbar styling */
+.checkbox-group::-webkit-scrollbar,
+.form-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.checkbox-group::-webkit-scrollbar-track,
+.form-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.checkbox-group::-webkit-scrollbar-thumb,
+.form-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.3));
+  border-radius: 4px;
+}
+
+.checkbox-group::-webkit-scrollbar-thumb:hover,
+.form-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.5));
 }

@@ -5,6 +5,7 @@ import RegisterPage from "./pages/RegisterPage"
 import StoresMapPage from "./pages/StoresMapPage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import PublicRoute from "./components/PublicRoute"
+import ProfilePage from "./pages/ProfilePage"
 import "./styles/AuthGuard.css"
 
 function App() {
@@ -51,6 +52,15 @@ function App() {
           element={
             <ProtectedRoute>
               <StoresMapPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

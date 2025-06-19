@@ -44,7 +44,7 @@ export default function LoginPage() {
         }
 
         console.log("Login successful:", response)
-        navigate("/map")
+        navigate("/stores")
       } else {
         setError(response.message || "Login failed. Please check your credentials.")
       }
@@ -86,7 +86,7 @@ export default function LoginPage() {
         }
 
         console.log("Google login successful:", response)
-        navigate("/map")
+        navigate("/stores")
       } else {
         setError(response.message || "Google login failed. Please try again.")
       }

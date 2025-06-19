@@ -101,9 +101,6 @@ export default function MapForm() {
         const brandsData = await BrandsService.getBrands()
 
         console.log("📦 Raw brands response:", brandsData)
-        console.log("📦 Type of brands response:", typeof brandsData)
-        console.log("📦 Is array?", Array.isArray(brandsData))
-        console.log("📦 Length:", brandsData?.length)
 
         if (brandsData) {
           console.log("✅ Setting available brands:", brandsData)
@@ -138,12 +135,6 @@ export default function MapForm() {
       setMapCenter([userLocation.lat, userLocation.lng])
     }
   }, [userLocation])
-
-  // Debug: Log availableBrands whenever it changes
-  useEffect(() => {
-    console.log("🎯 Available brands state updated:", availableBrands)
-    console.log("🎯 Available brands length:", availableBrands?.length)
-  }, [availableBrands])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -272,7 +263,7 @@ export default function MapForm() {
       setBrandsError("")
 
       try {
-        const brandsData = await BrandsService.getBrands()
+        const brandsData = await StoreService.getBrands()
         console.log("🔄 Retry - received brands:", brandsData)
         setAvailableBrands(brandsData)
       } catch (error) {
@@ -291,13 +282,6 @@ export default function MapForm() {
 
     fetchBrands()
   }
-
-  // Debug render info
-  console.log("🎨 Rendering MapForm with:")
-  console.log("  - isLoadingBrands:", isLoadingBrands)
-  console.log("  - brandsError:", brandsError)
-  console.log("  - availableBrands:", availableBrands)
-  console.log("  - availableBrands.length:", availableBrands?.length)
 
   return (
     <div className="map-page-container">
@@ -379,11 +363,7 @@ export default function MapForm() {
             Marcas <span className="required">*</span>
           </label>
 
-          {/* Debug info */}
-          <div style={{ fontSize: "12px", color: "#666", marginBottom: "8px" }}>
-            Debug: Loading={isLoadingBrands.toString()}, Error={brandsError || "none"}, Count=
-            {availableBrands?.length || 0}
-          </div>
+          {/* REMOVED DEBUG INFO */}
 
           {isLoadingBrands ? (
             <div className="loading-message">Carregando marcas...</div>
@@ -398,7 +378,6 @@ export default function MapForm() {
             <div className="checkbox-group">
               {availableBrands && availableBrands.length > 0 ? (
                 availableBrands.map((brand) => {
-                  console.log("🎨 Rendering brand:", brand)
                   return (
                     <label key={brand.id} className="checkbox-label">
                       <input
@@ -413,9 +392,7 @@ export default function MapForm() {
                   )
                 })
               ) : (
-                <div className="no-brands-message">
-                  Nenhuma marca disponível (Total: {availableBrands?.length || 0})
-                </div>
+                <div className="no-brands-message">Nenhuma marca disponível</div>
               )}
             </div>
           )}

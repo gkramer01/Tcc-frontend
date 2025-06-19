@@ -2,54 +2,99 @@
 
 import { useState, useEffect } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
-import { Edit } from "lucide-react"
+import { Edit, MapPin } from "lucide-react"
 import Header from "../components/Header"
 import StoreUpdateModal from "../components/StoreUpdateModal"
+import StoreSearchBar from "../components/StoreSearchBar"
 import { StoreService } from "../services/StoreService"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import "../styles/StoresMapPage.css"
 
-// Component to recenter map based on user location
-function LocationFinder() {
+// Component to handle map centering
+function MapController({ center, zoom }) {
   const map = useMap()
-  const [userLocationFound, setUserLocationFound] = useState(false)
 
   useEffect(() => {
-    if ("geolocation" in navigator && !userLocationFound) {
-      console.log("🌍 Getting user location for stores map...")
+    if (center) {
+      console.log("🎯 Centering map on:", center, "with zoom:", zoom)
+      map.setView(center, zoom || 16)
+    }
+  }, [map, center, zoom])
+
+  return null
+}
+
+// Component to get user location and center map
+function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
+  const map = useMap()
+  const [locationAttempted, setLocationAttempted] = useState(false)
+
+  useEffect(() => {
+    if ("geolocation" in navigator && !locationAttempted) {
+      console.log("🌍 Attempting to get user location...")
+      setLocationAttempted(true)
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude, accuracy } = position.coords
           console.log(`🌍 User location found: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
-          map.setView([latitude, longitude], 15) // Increased zoom level
-          setUserLocationFound(true)
+          const userLocation = [latitude, longitude]
+
+          if (shouldCenter) {
+            console.log("🎯 Centering map on user location")
+            map.setView(userLocation, 15)
+          }
+
+          if (onLocationFound) {
+            onLocationFound({ lat: latitude, lng: longitude, accuracy })
+          }
         },
         (error) => {
           console.error("🌍 Error getting location:", error.message)
           console.error("🌍 Error code:", error.code)
-          // Keep default location or first store location
+
+          let errorMessage = "Erro ao obter localização: "
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += "Permissão negada pelo usuário"
+              break
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += "Localização indisponível"
+              break
+            case error.TIMEOUT:
+              errorMessage += "Tempo limite excedido"
+              break
+            default:
+              errorMessage += "Erro desconhecido"
+              break
+          }
+          console.error(errorMessage)
+
+          if (onLocationFound) {
+            onLocationFound(null, errorMessage)
+          }
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000, // Increased timeout
-          maximumAge: 60000, // Allow cached location up to 1 minute
+          timeout: 15000, // 15 seconds timeout
+          maximumAge: 300000, // 5 minutes cache
         },
       )
     } else if (!navigator.geolocation) {
-      console.log("🌍 Geolocation not available")
+      console.log("🌍 Geolocation not available in this browser")
+      if (onLocationFound) {
+        onLocationFound(null, "Geolocalização não disponível neste navegador")
+      }
     }
-  }, [map, userLocationFound])
+  }, [map, onLocationFound, shouldCenter, locationAttempted])
 
   return null
 }
 
 // Component to add user location marker
-function UserLocationMarker() {
-  const [position, setPosition] = useState(null)
-  const map = useMap()
-
+function UserLocationMarker({ userLocation }) {
   const userIcon = new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
     iconSize: [25, 41],
@@ -59,35 +104,37 @@ function UserLocationMarker() {
     shadowSize: [41, 41],
   })
 
-  useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude, accuracy } = position.coords
-          console.log(`🌍 User marker location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
-          setPosition([latitude, longitude])
-        },
-        (error) => {
-          console.error("🌍 Error getting user location marker:", error.message)
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        },
-      )
-    }
-  }, [map])
+  if (!userLocation) return null
 
-  return position === null ? null : (
-    <Marker position={position} icon={userIcon}>
+  return (
+    <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
       <Popup>
         <div>
           <strong>Sua localização</strong>
           <p>Você está aqui</p>
+          {userLocation.accuracy && (
+            <p>
+              <small>Precisão: ~{Math.round(userLocation.accuracy)}m</small>
+            </p>
+          )}
         </div>
       </Popup>
     </Marker>
+  )
+}
+
+// Component for location control button
+function LocationButton({ onLocationRequest, isLoading }) {
+  return (
+    <button
+      className="location-control-button"
+      onClick={onLocationRequest}
+      disabled={isLoading}
+      title="Centralizar no minha localização"
+    >
+      <MapPin size={20} />
+      {isLoading && <div className="location-loading-spinner"></div>}
+    </button>
   )
 }
 
@@ -96,10 +143,16 @@ export default function StoresMapPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [mapCenter, setMapCenter] = useState([-23.55052, -46.633308]) // Default to São Paulo
+  const [mapZoom, setMapZoom] = useState(13)
   const [selectedStore, setSelectedStore] = useState(null)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
+  const [highlightedStore, setHighlightedStore] = useState(null)
+  const [userLocation, setUserLocation] = useState(null)
+  const [locationError, setLocationError] = useState("")
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
+  const [shouldCenterOnUser, setShouldCenterOnUser] = useState(true)
 
-  // Custom marker icon
+  // Custom marker icons
   const storeIcon = new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     iconSize: [25, 41],
@@ -107,6 +160,15 @@ export default function StoresMapPage() {
     popupAnchor: [1, -34],
     shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
     shadowSize: [41, 41],
+  })
+
+  const highlightedStoreIcon = new L.Icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+    iconSize: [30, 49],
+    iconAnchor: [15, 49],
+    popupAnchor: [1, -34],
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    shadowSize: [49, 49],
   })
 
   const fetchStores = async () => {
@@ -121,20 +183,18 @@ export default function StoresMapPage() {
       if (Array.isArray(storesData)) {
         setStores(storesData)
 
-        // If we have stores, set the map center to the first store
-        if (storesData.length > 0) {
+        // Only set map center to first store if we don't have user location
+        if (storesData.length > 0 && !userLocation && !shouldCenterOnUser) {
           setMapCenter([storesData[0].latitude, storesData[0].longitude])
         }
       } else {
         console.error("❌ Stores data is not an array:", storesData)
         setError("Formato de dados inválido recebido do servidor")
-        // Fallback to empty array
         setStores([])
       }
     } catch (error) {
       console.error("❌ Error fetching stores:", error)
       setError("Erro ao carregar as lojas. Tente novamente.")
-      // Fallback to empty array
       setStores([])
     } finally {
       setIsLoading(false)
@@ -145,6 +205,77 @@ export default function StoresMapPage() {
   useEffect(() => {
     fetchStores()
   }, [])
+
+  const handleLocationFound = (location, error) => {
+    setIsGettingLocation(false)
+
+    if (location) {
+      console.log("📍 Location found:", location)
+      setUserLocation(location)
+      setLocationError("")
+
+      if (shouldCenterOnUser) {
+        setMapCenter([location.lat, location.lng])
+        setMapZoom(15)
+      }
+    } else {
+      console.error("📍 Location error:", error)
+      setLocationError(error || "Erro ao obter localização")
+      setUserLocation(null)
+    }
+  }
+
+  const handleLocationRequest = () => {
+    console.log("🔄 Manual location request")
+    setIsGettingLocation(true)
+    setLocationError("")
+    setShouldCenterOnUser(true)
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords
+          console.log(`🌍 Manual location found: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
+
+          const location = { lat: latitude, lng: longitude, accuracy }
+          setUserLocation(location)
+          setMapCenter([latitude, longitude])
+          setMapZoom(15)
+          setIsGettingLocation(false)
+          setLocationError("")
+        },
+        (error) => {
+          console.error("🌍 Manual location error:", error)
+          setIsGettingLocation(false)
+
+          let errorMessage = "Erro ao obter localização: "
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += "Permissão negada. Permita o acesso à localização nas configurações do navegador."
+              break
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += "Localização indisponível. Verifique se o GPS está ativado."
+              break
+            case error.TIMEOUT:
+              errorMessage += "Tempo limite excedido. Tente novamente."
+              break
+            default:
+              errorMessage += "Erro desconhecido"
+              break
+          }
+          setLocationError(errorMessage)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 60000, // 1 minute cache
+        },
+      )
+    } else {
+      setLocationError("Geolocalização não disponível neste navegador")
+      setIsGettingLocation(false)
+    }
+  }
 
   // Format brands list for display
   const formatBrands = (brands) => {
@@ -165,8 +296,33 @@ export default function StoresMapPage() {
   }
 
   const handleStoreUpdated = () => {
-    // Refresh the stores list
     fetchStores()
+  }
+
+  const handleStoreSelect = (store) => {
+    console.log("🎯 Store selected from search:", store)
+    setShouldCenterOnUser(false) // Don't auto-center on user when selecting a store
+    setMapCenter([store.latitude, store.longitude])
+    setMapZoom(16)
+    setHighlightedStore(store.id || store.name)
+
+    // Clear highlight after 3 seconds
+    setTimeout(() => {
+      setHighlightedStore(null)
+    }, 3000)
+  }
+
+  const handleClearSearch = () => {
+    setHighlightedStore(null)
+    // Reset to user location if available, otherwise first store
+    if (userLocation) {
+      setMapCenter([userLocation.lat, userLocation.lng])
+      setMapZoom(15)
+      setShouldCenterOnUser(true)
+    } else if (stores.length > 0) {
+      setMapCenter([stores[0].latitude, stores[0].longitude])
+      setMapZoom(13)
+    }
   }
 
   return (
@@ -176,6 +332,20 @@ export default function StoresMapPage() {
       <div className="stores-map-content">
         <div className="stores-map-header">
           <h1 className="page-title">Lojas Cadastradas</h1>
+
+          <div className="search-section">
+            <StoreSearchBar onStoreSelect={handleStoreSelect} onClearSearch={handleClearSearch} />
+          </div>
+
+          {locationError && (
+            <div className="location-error">
+              {locationError}
+              <button onClick={handleLocationRequest} className="retry-location-button">
+                Tentar Novamente
+              </button>
+            </div>
+          )}
+
           {isLoading && <div className="loading-message">Carregando lojas...</div>}
           {error && <div className="error-message">{error}</div>}
           {!isLoading && !error && (
@@ -188,52 +358,69 @@ export default function StoresMapPage() {
         <div className="map-container-full">
           <MapContainer
             center={mapCenter}
-            zoom={13}
+            zoom={mapZoom}
             className="leaflet-container"
             style={{ height: "100%", width: "100%" }}
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <LocationFinder />
-            <UserLocationMarker />
 
-            {stores.map((store, index) => (
-              <Marker key={index} position={[store.latitude, store.longitude]} icon={storeIcon}>
-                <Popup>
-                  <div className="store-popup">
-                    <div className="store-popup-header">
-                      <h3 className="store-name">{store.name}</h3>
-                      <button onClick={() => handleEditStore(store)} className="edit-store-button" title="Editar loja">
-                        <Edit size={16} />
-                      </button>
+            <UserLocationFinder onLocationFound={handleLocationFound} shouldCenter={shouldCenterOnUser} />
+
+            <UserLocationMarker userLocation={userLocation} />
+
+            <MapController center={mapCenter} zoom={mapZoom} />
+
+            {stores.map((store, index) => {
+              const isHighlighted = highlightedStore === store.id || highlightedStore === store.name
+              return (
+                <Marker
+                  key={index}
+                  position={[store.latitude, store.longitude]}
+                  icon={isHighlighted ? highlightedStoreIcon : storeIcon}
+                >
+                  <Popup>
+                    <div className="store-popup">
+                      <div className="store-popup-header">
+                        <h3 className="store-name">{store.name}</h3>
+                        <button
+                          onClick={() => handleEditStore(store)}
+                          className="edit-store-button"
+                          title="Editar loja"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </div>
+                      <div className="store-details">
+                        {store.address && (
+                          <p>
+                            <strong>Endereço:</strong> {store.address}
+                          </p>
+                        )}
+                        {store.email && (
+                          <p>
+                            <strong>Email:</strong> {store.email}
+                          </p>
+                        )}
+                        {store.website && (
+                          <p>
+                            <strong>Website:</strong>{" "}
+                            <a href={store.website} target="_blank" rel="noopener noreferrer">
+                              {store.website}
+                            </a>
+                          </p>
+                        )}
+                        <p>
+                          <strong>Marcas:</strong> {formatBrands(store.brands)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="store-details">
-                      {store.address && (
-                        <p>
-                          <strong>Endereço:</strong> {store.address}
-                        </p>
-                      )}
-                      {store.email && (
-                        <p>
-                          <strong>Email:</strong> {store.email}
-                        </p>
-                      )}
-                      {store.website && (
-                        <p>
-                          <strong>Website:</strong>{" "}
-                          <a href={store.website} target="_blank" rel="noopener noreferrer">
-                            {store.website}
-                          </a>
-                        </p>
-                      )}
-                      <p>
-                        <strong>Marcas:</strong> {formatBrands(store.brands)}
-                      </p>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                  </Popup>
+                </Marker>
+              )
+            })}
           </MapContainer>
+
+          <LocationButton onLocationRequest={handleLocationRequest} isLoading={isGettingLocation} />
         </div>
       </div>
 

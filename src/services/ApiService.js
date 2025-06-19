@@ -45,8 +45,7 @@ export const apiRequest = async (endpoint, options = {}) => {
         })
       } else {
         // If refresh failed, throw error
-        console.log("Token refresh failed, redirecting to login...")
-        window.location.href = "/login"
+        console.log("Token refresh failed")
         throw new Error("Sessão expirada. Por favor, faça login novamente.")
       }
     }

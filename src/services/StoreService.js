@@ -39,6 +39,32 @@ export const StoreService = {
     }
   },
 
+  searchStores: async (searchTerm) => {
+    try {
+      console.log("🔍 Making API call to search stores:", searchTerm)
+
+      const response = await apiRequest(`/stores/search?storeName=${encodeURIComponent(searchTerm)}`, {
+        method: "GET",
+      })
+
+      console.log("📡 Search response status:", response.status)
+      console.log("📡 Search response ok:", response.ok)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log("📦 Search results:", data)
+
+      // Return the search results array
+      return data
+    } catch (error) {
+      console.error("❌ Error searching stores:", error)
+      throw error
+    }
+  },
+
   createStore: async (store) => {
     try {
       const response = await apiRequest("/store", {
