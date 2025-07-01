@@ -141,7 +141,7 @@ export default function LoginPage() {
   }
 
   return (
-    <GoogleOAuthProvider clientId="851072462108-1fujt48n2p557sbsi03ltc3drmk1fh2a.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId="">
       <div className="auth-page-container">
         <div className="auth-card">
           <h2 className="auth-title">Faça login na sua conta</h2>
