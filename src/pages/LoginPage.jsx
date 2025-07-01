@@ -35,21 +35,50 @@ export default function LoginPage() {
         password: formData.password,
       }
 
+      console.log("🔐 Attempting login with:", { username: user.username })
       const response = await AuthService.Login(user)
 
       if (response.success || response.token) {
+        console.log("✅ Login successful:", response)
+
+        // Additional token storage for backward compatibility
         if (response.token) {
           localStorage.setItem("authToken", response.token)
           localStorage.setItem("token", response.token)
+
+          // Force immediate user data extraction and update
+          try {
+            const payload = JSON.parse(atob(response.token.split(".")[1]))
+            const userInfo = {
+              id: payload.sub || payload.id || payload.nameid || null,
+              name: payload.name || payload.given_name || null,
+              userName: payload.preferred_username || payload.unique_name || payload.userName || null,
+              email: payload.email || null,
+              role: payload.role || payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null,
+              picture: payload.picture || null,
+            }
+
+            if (userInfo.name || userInfo.userName || userInfo.email) {
+              localStorage.setItem("user", JSON.stringify(userInfo))
+              console.log("👤 User info stored immediately after login:", userInfo)
+
+              // Force multiple user data update events
+              window.dispatchEvent(new CustomEvent("userDataUpdated"))
+              setTimeout(() => window.dispatchEvent(new CustomEvent("userDataUpdated")), 100)
+              setTimeout(() => window.dispatchEvent(new CustomEvent("userDataUpdated")), 300)
+            }
+          } catch (tokenError) {
+            console.error("Error extracting user info immediately after login:", tokenError)
+          }
         }
 
-        console.log("Login successful:", response)
+        // Navigate to stores page instead of map
         navigate("/stores")
       } else {
         setError(response.message || "Login failed. Please check your credentials.")
       }
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("❌ Login error:", error)
       setError("An error occurred during login. Please try again.")
     } finally {
       setIsLoading(false)
@@ -66,14 +95,21 @@ export default function LoginPage() {
     setError("")
 
     try {
+      console.log("🔐 Google credential received")
+      console.log("🔐 Credential length:", credentialResponse.credential.length)
+
       // Extract user info for immediate display (optional)
       const userInfo = extractUserInfoFromCredential(credentialResponse.credential)
       console.log("👤 Google user info extracted:", userInfo)
 
+      // Send the credential directly as IdToken string
       const response = await AuthService.GoogleLogin(credentialResponse.credential)
+      console.log("🔐 AuthService.GoogleLogin response:", response)
 
       if (response.success && response.token) {
-        // Store the token
+        console.log("✅ Google login successful, navigating to /stores")
+
+        // Store the token for backward compatibility
         localStorage.setItem("authToken", response.token)
         localStorage.setItem("token", response.token)
 
@@ -85,21 +121,22 @@ export default function LoginPage() {
           localStorage.setItem("user", JSON.stringify(userInfo))
         }
 
-        console.log("Google login successful:", response)
+        // Navigate to stores page instead of map
         navigate("/stores")
       } else {
+        console.log("❌ Google login failed:", response)
         setError(response.message || "Google login failed. Please try again.")
       }
     } catch (error) {
-      console.error("Google login error:", error)
+      console.error("❌ Google login error:", error)
       setError("An error occurred during Google login. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleGoogleFailure = () => {
-    console.error("Erro no login com Google")
+  const handleGoogleFailure = (error) => {
+    console.error("❌ Google OAuth error:", error)
     setError("Google login failed. Please try again.")
   }
 

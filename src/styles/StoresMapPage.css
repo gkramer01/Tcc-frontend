@@ -261,7 +261,16 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.edit-store-button {
+.store-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Unified button styling for both edit and delete */
+.edit-store-button,
+.delete-store-button {
   background: linear-gradient(145deg, #e74c3c, #c0392b);
   color: white;
   border: none;
@@ -272,11 +281,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 0.75rem;
   box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  width: 32px;
+  height: 32px;
 }
 
-.edit-store-button:hover {
+.edit-store-button:hover,
+.delete-store-button:hover {
   background: linear-gradient(145deg, #c0392b, #a93226);
   transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
@@ -354,7 +365,10 @@
     font-size: 0.85rem;
   }
 
-  .edit-store-button {
+  .edit-store-button,
+  .delete-store-button {
+    width: 28px;
+    height: 28px;
     padding: 0.4rem;
   }
 
@@ -381,6 +395,16 @@
   .location-control-button {
     width: 45px;
     height: 45px;
+  }
+
+  .store-actions {
+    gap: 0.25rem;
+  }
+
+  .edit-store-button,
+  .delete-store-button {
+    width: 26px;
+    height: 26px;
   }
 }
 

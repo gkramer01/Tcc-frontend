@@ -21,7 +21,24 @@ function setAuthTokens(token, refreshToken) {
     const userInfo = extractUserInfoFromToken(token)
     if (userInfo) {
       localStorage.setItem("user", JSON.stringify(userInfo))
-      console.log("👤 User info extracted from token:", userInfo)
+      console.log("👤 User info extracted and stored from token:", userInfo)
+
+      // Force update of user profile component with multiple attempts
+      // Immediate dispatch
+      window.dispatchEvent(new CustomEvent("userDataUpdated"))
+      console.log("📡 userDataUpdated event dispatched immediately")
+
+      // Delayed dispatch to ensure components are ready
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("userDataUpdated"))
+        console.log("📡 userDataUpdated event dispatched after 100ms")
+      }, 100)
+
+      // Additional dispatch after a longer delay as fallback
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("userDataUpdated"))
+        console.log("📡 userDataUpdated event dispatched after 500ms (fallback)")
+      }, 500)
     }
   }
 }
@@ -41,18 +58,25 @@ function getAuthHeaders() {
   }
 }
 
-// Extract user information from JWT token - UPDATED for new token format
+// Extract user information from JWT token - UPDATED to extract role and other claims
 function extractUserInfoFromToken(token) {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]))
-    console.log("🔍 JWT payload:", payload)
+    console.log("🔍 Full JWT payload:", payload)
 
-    // Extract claims from the new simplified JWT format
+    // Extract user info from JWT claims
     const userInfo = {
-      name: payload.name || null,
-      id: payload.id || null,
-      role: payload.role || null,
+      id: payload.sub || payload.id || payload.nameid || null,
+      name: payload.name || payload.given_name || null,
+      userName: payload.preferred_username || payload.unique_name || payload.userName || null,
       email: payload.email || null,
+      role: payload.role || payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null,
+      picture: payload.picture || null, // For Google login
+      // Add other common JWT claims
+      aud: payload.aud,
+      iss: payload.iss,
+      exp: payload.exp,
+      iat: payload.iat,
     }
 
     console.log("👤 Extracted user info:", userInfo)
@@ -61,6 +85,17 @@ function extractUserInfoFromToken(token) {
     console.error("Error extracting user info from token:", error)
     return null
   }
+}
+
+// Get current user info from token
+export function getCurrentUserFromToken() {
+  const token = getToken()
+  if (!token) {
+    console.log("🔍 No token available for user extraction")
+    return null
+  }
+
+  return extractUserInfoFromToken(token)
 }
 
 // Check if token is expired
@@ -109,12 +144,25 @@ export const AuthService = {
       }
 
       const result = await response.json()
+      console.log("🔐 Login response:", result)
 
       if (result.success && result.token) {
         setAuthTokens(result.token, result.refreshToken)
 
         // Start auto-refresh mechanism
         AuthService.startAutoRefresh()
+
+        // Additional user data update after login success
+        setTimeout(() => {
+          const userInfo = extractUserInfoFromToken(result.token)
+          if (userInfo) {
+            localStorage.setItem("user", JSON.stringify(userInfo))
+            window.dispatchEvent(new CustomEvent("userDataUpdated"))
+            console.log("📡 Additional userDataUpdated event after login success")
+          }
+        }, 200)
+
+        console.log("✅ Login successful, user data should be loaded")
       }
 
       return result
@@ -301,8 +349,9 @@ export const AuthService = {
 
   GoogleLogin: async (googleCredential) => {
     try {
+      // Send IdToken as string
       const googleLoginData = {
-        credential: googleCredential,
+        IdToken: googleCredential,
       }
 
       console.log("🔐 Sending Google login request...")
@@ -315,25 +364,44 @@ export const AuthService = {
         body: JSON.stringify(googleLoginData),
       })
 
-      if (response.status === 401) {
+      console.log("📡 Google login response status:", response.status)
+
+      // Get response text first to see what we're dealing with
+      const responseText = await response.text()
+      console.log("📄 Raw response text:", responseText)
+
+      if (!response.ok) {
+        console.error("🔐 Google login HTTP error:", response.status, responseText)
         return {
           success: false,
-          message: "Não foi possível autenticar com o Google. Tente novamente.",
+          message: `Erro no servidor: ${response.status}. ${responseText}`,
         }
       }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      // Try to parse as JSON
+      let result
+      try {
+        result = JSON.parse(responseText)
+        console.log("📦 Parsed Google login response:", result)
+      } catch (parseError) {
+        console.error("❌ Failed to parse response as JSON:", parseError)
+        return {
+          success: false,
+          message: "Resposta inválida do servidor. Tente novamente.",
+        }
       }
 
-      const result = await response.json()
-      console.log("🔐 Google login response:", result)
+      // Check for different possible response formats
+      const hasToken = result.token || result.accessToken || result.jwt
+      const isSuccess = result.success === true || result.success === "true" || hasToken
 
-      if (result.success && result.token) {
-        setAuthTokens(result.token, result.refreshToken)
+      if (isSuccess && hasToken) {
+        const token = result.token || result.accessToken || result.jwt
+        console.log("✅ Google login successful with token")
 
-        // For Google login, we might also want to extract info from the Google credential
-        // as a fallback if the JWT doesn't have all the info we need
+        setAuthTokens(token, result.refreshToken)
+
+        // For Google login, merge with Google credential info
         try {
           const { extractUserInfoFromCredential } = await import("../utils/googleAuth")
           const googleUserInfo = extractUserInfoFromCredential(googleCredential)
@@ -350,18 +418,37 @@ export const AuthService = {
 
           localStorage.setItem("user", JSON.stringify(mergedUserInfo))
           console.log("👤 Merged user info for Google login:", mergedUserInfo)
+
+          // Force update of user profile component
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("userDataUpdated"))
+            console.log("📡 userDataUpdated event dispatched for Google login")
+          }, 100)
         } catch (error) {
           console.error("Error merging Google user info:", error)
         }
 
         // Start auto-refresh mechanism
         AuthService.startAutoRefresh()
-      }
 
-      return result
+        return {
+          success: true,
+          token: token,
+          message: result.message || "Login realizado com sucesso",
+        }
+      } else {
+        console.log("❌ Google login failed - no token or success flag")
+        return {
+          success: false,
+          message: result.message || "Login com Google falhou. Tente novamente.",
+        }
+      }
     } catch (error) {
-      console.error("Google login error:", error)
-      throw error
+      console.error("❌ Google login error:", error)
+      return {
+        success: false,
+        message: "Erro durante login com Google. Tente novamente.",
+      }
     }
   },
 }
@@ -379,6 +466,10 @@ if (typeof window !== "undefined") {
         if (userInfo) {
           localStorage.setItem("user", JSON.stringify(userInfo))
           console.log("👤 Re-extracted user info on page load:", userInfo)
+          // Dispatch event to update UI
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("userDataUpdated"))
+          }, 100)
         }
       }
 

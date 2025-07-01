@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet"
 import { StoreService } from "../services/StoreService"
-import { BrandsService } from "../services/BrandService"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 
@@ -21,27 +20,124 @@ function LocationFinder({ setUserLocation }) {
 
   useEffect(() => {
     if ("geolocation" in navigator) {
-      console.log("🌍 Getting user location...")
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude, accuracy } = position.coords
-          console.log(`🌍 User location found: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
+      console.log("🌍 Getting user location with maximum precision...")
 
-          const userLocation = { lat: latitude, lng: longitude }
-          setUserLocation(userLocation)
-          map.setView([latitude, longitude], 15) // Increased zoom level for better accuracy
-        },
-        (error) => {
-          console.error("🌍 Error getting location:", error.message)
-          console.error("🌍 Error code:", error.code)
-          // Keep default location (São Paulo)
-        },
-        {
+      // Multiple attempts with different configurations for better accuracy
+      const attemptHighAccuracyLocation = () => {
+        const highAccuracyOptions = {
           enableHighAccuracy: true,
-          timeout: 10000, // Increased timeout
-          maximumAge: 60000, // Allow cached location up to 1 minute
-        },
-      )
+          timeout: 45000, // Increased timeout to 45 seconds
+          maximumAge: 0, // Always get fresh location
+        }
+
+        console.log("🎯 Attempting high accuracy GPS location...")
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude, accuracy } = position.coords
+            console.log(`🌍 High accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
+
+            const userLocation = { lat: latitude, lng: longitude }
+            setUserLocation(userLocation)
+
+            // Reduced zoom levels by approximately 30%
+            let zoomLevel = 14 // Reduced from 19
+            if (accuracy <= 10) {
+              zoomLevel = 15 // Reduced from 18
+            }
+            if (accuracy <= 50) {
+              zoomLevel = 14 // Reduced from 17
+            }
+            if (accuracy <= 100) {
+              zoomLevel = 13 // Reduced from 16
+            }
+            if (accuracy > 100) {
+              zoomLevel = 12 // Reduced from 15
+            }
+
+            console.log(`🎯 Setting zoom level ${zoomLevel} for accuracy ${accuracy}m`)
+            map.setView([latitude, longitude], zoomLevel)
+          },
+          (error) => {
+            console.error("🌍 High accuracy location failed:", error.message, "Code:", error.code)
+
+            // Try with medium accuracy settings
+            attemptMediumAccuracyLocation()
+          },
+          highAccuracyOptions,
+        )
+      }
+
+      const attemptMediumAccuracyLocation = () => {
+        const mediumAccuracyOptions = {
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 30000, // Allow 30 second old location
+        }
+
+        console.log("🎯 Attempting medium accuracy location...")
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude, accuracy } = position.coords
+            console.log(`🌍 Medium accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
+
+            const userLocation = { lat: latitude, lng: longitude }
+            setUserLocation(userLocation)
+
+            let zoomLevel = 13
+            if (accuracy <= 100) {
+              zoomLevel = 14
+            }
+            if (accuracy > 1000) {
+              zoomLevel = 11
+            }
+
+            map.setView([latitude, longitude], zoomLevel)
+          },
+          (error) => {
+            console.error("🌍 Medium accuracy location failed:", error.message)
+
+            // Final attempt with basic settings
+            attemptBasicLocation()
+          },
+          mediumAccuracyOptions,
+        )
+      }
+
+      const attemptBasicLocation = () => {
+        const basicOptions = {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 300000, // Allow 5 minute old location
+        }
+
+        console.log("🎯 Attempting basic location (network-based)...")
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude, accuracy } = position.coords
+            console.log(`🌍 Basic location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
+
+            const userLocation = { lat: latitude, lng: longitude }
+            setUserLocation(userLocation)
+
+            let zoomLevel = 12
+            if (accuracy <= 1000) {
+              zoomLevel = 13
+            }
+            if (accuracy > 5000) {
+              zoomLevel = 10
+            }
+
+            map.setView([latitude, longitude], zoomLevel)
+          },
+          (error) => {
+            console.error("🌍 All location attempts failed:", error.message)
+          },
+          basicOptions,
+        )
+      }
+
+      // Start with the highest accuracy attempt
+      attemptHighAccuracyLocation()
     } else {
       console.log("🌍 Geolocation not available")
     }
@@ -98,28 +194,22 @@ export default function MapForm() {
 
       try {
         console.log("🔄 Starting to fetch brands...")
-        const brandsData = await BrandsService.getBrands()
+        const brandsData = await StoreService.getBrands()
 
         console.log("📦 Raw brands response:", brandsData)
 
-        if (brandsData) {
+        if (brandsData && Array.isArray(brandsData) && brandsData.length > 0) {
           console.log("✅ Setting available brands:", brandsData)
           setAvailableBrands(brandsData)
         } else {
           console.log("❌ No brands data received")
-          setBrandsError("Nenhuma marca recebida do servidor")
+          setBrandsError("Nenhuma marca disponível no momento")
+          setAvailableBrands([])
         }
       } catch (error) {
         console.error("❌ Error fetching brands:", error)
         setBrandsError(`Erro ao carregar marcas: ${error.message}`)
-        // Fallback to static brands if API fails
-        console.log("🔄 Using fallback brands")
-        setAvailableBrands([
-          { id: "1", name: "Marca A" },
-          { id: "2", name: "Marca B" },
-          { id: "3", name: "Marca C" },
-          { id: "4", name: "Marca D" },
-        ])
+        setAvailableBrands([])
       } finally {
         setIsLoadingBrands(false)
         console.log("🏁 Finished loading brands")
@@ -265,16 +355,17 @@ export default function MapForm() {
       try {
         const brandsData = await StoreService.getBrands()
         console.log("🔄 Retry - received brands:", brandsData)
-        setAvailableBrands(brandsData)
+
+        if (brandsData && Array.isArray(brandsData) && brandsData.length > 0) {
+          setAvailableBrands(brandsData)
+        } else {
+          setBrandsError("Nenhuma marca disponível no momento")
+          setAvailableBrands([])
+        }
       } catch (error) {
         console.error("🔄 Retry - error fetching brands:", error)
         setBrandsError(`Erro ao carregar marcas: ${error.message}`)
-        setAvailableBrands([
-          { id: "1", name: "Marca A" },
-          { id: "2", name: "Marca B" },
-          { id: "3", name: "Marca C" },
-          { id: "4", name: "Marca D" },
-        ])
+        setAvailableBrands([])
       } finally {
         setIsLoadingBrands(false)
       }
@@ -362,8 +453,6 @@ export default function MapForm() {
           <label>
             Marcas <span className="required">*</span>
           </label>
-
-          {/* REMOVED DEBUG INFO */}
 
           {isLoadingBrands ? (
             <div className="loading-message">Carregando marcas...</div>

@@ -10,9 +10,9 @@ import "../styles/ProfilePage.css"
 export default function ProfilePage() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    Name: "",
+    Name: "", // Full name
     Email: "",
-    UserName: "",
+    UserName: "", // Username
   })
   const [originalData, setOriginalData] = useState({})
   const [isLoading, setIsLoading] = useState(true)
@@ -34,9 +34,9 @@ export default function ProfilePage() {
           console.log("👤 Local user data:", parsedUser)
 
           const userFormData = {
-            Name: parsedUser.name || "",
+            Name: parsedUser.name || "", // Full name
             Email: parsedUser.email || "",
-            UserName: parsedUser.name || "", // Use name as username fallback since we don't have username in token
+            UserName: parsedUser.userName || "", // Username
           }
 
           setFormData(userFormData)
@@ -54,9 +54,9 @@ export default function ProfilePage() {
             console.log("🔍 Token payload:", payload)
 
             const tokenData = {
-              Name: payload.name || "",
+              Name: payload.name || "", // Full name
               Email: payload.email || "",
-              UserName: payload.name || "", // Use name as username fallback
+              UserName: payload.userName || "", // Username
             }
 
             setFormData(tokenData)
@@ -66,6 +66,7 @@ export default function ProfilePage() {
             // Store in localStorage for future use
             const userInfo = {
               name: payload.name,
+              userName: payload.userName,
               email: payload.email,
               id: payload.id,
               role: payload.role,
@@ -112,7 +113,7 @@ export default function ProfilePage() {
 
   const validateForm = () => {
     if (!formData.Name.trim()) {
-      setError("Nome é obrigatório!")
+      setError("Nome completo é obrigatório!")
       return false
     }
     if (!formData.Email.trim()) {

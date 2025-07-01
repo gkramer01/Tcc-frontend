@@ -3,20 +3,19 @@ import LoginPage from "./pages/LoginPage"
 import MapPage from "./pages/MapPage"
 import RegisterPage from "./pages/RegisterPage"
 import StoresMapPage from "./pages/StoresMapPage"
+import ProfilePage from "./pages/ProfilePage"
 import ProtectedRoute from "./components/ProtectedRoute"
 import PublicRoute from "./components/PublicRoute"
-import ProfilePage from "./pages/ProfilePage"
 import "./styles/AuthGuard.css"
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Public routes - redirect to /map if already authenticated */}
         <Route
           path="/"
           element={
-            <PublicRoute>
+            <PublicRoute redirectTo="/stores">
               <Navigate to="/login" replace />
             </PublicRoute>
           }
@@ -24,7 +23,7 @@ function App() {
         <Route
           path="/login"
           element={
-            <PublicRoute>
+            <PublicRoute redirectTo="/stores">
               <LoginPage />
             </PublicRoute>
           }
@@ -32,13 +31,12 @@ function App() {
         <Route
           path="/register"
           element={
-            <PublicRoute>
+            <PublicRoute redirectTo="/stores">
               <RegisterPage />
             </PublicRoute>
           }
         />
 
-        {/* Protected routes - require authentication */}
         <Route
           path="/map"
           element={
@@ -55,7 +53,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/profile"
           element={
@@ -65,7 +62,6 @@ function App() {
           }
         />
 
-        {/* Catch all route - redirect to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

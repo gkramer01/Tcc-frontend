@@ -1,0 +1,297 @@
+/* DeleteConfirmationModal.css - Diecast Theme */
+
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;
+  padding: 1rem;
+}
+
+.delete-modal-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 25px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  width: 100%;
+  max-width: 28rem;
+  overflow: hidden;
+  border: 2px solid rgba(231, 76, 60, 0.5);
+  position: relative;
+  animation: deleteModalSlideIn 0.3s ease-out;
+}
+
+.delete-modal-content::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #e74c3c, #c0392b, #e74c3c, #c0392b);
+  background-size: 400% 400%;
+  border-radius: 25px;
+  z-index: -1;
+  animation: deleteBorderGlow 2s ease-in-out infinite;
+}
+
+@keyframes deleteModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes deleteBorderGlow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.delete-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2rem 2rem 0 2rem;
+}
+
+.delete-icon-container {
+  background: linear-gradient(145deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2));
+  border: 2px solid #e74c3c;
+  border-radius: 50%;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(231, 76, 60, 0.3);
+}
+
+.delete-icon {
+  color: #e74c3c;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.delete-modal-close-button {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 50%;
+  color: #ffffff;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.delete-modal-close-button:hover:not(:disabled) {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  border-color: #ffffff;
+  transform: scale(1.1);
+}
+
+.delete-modal-close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.delete-modal-body {
+  padding: 1.5rem 2rem 2rem 2rem;
+  text-align: center;
+}
+
+.delete-modal-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.delete-modal-message {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.delete-modal-message strong {
+  color: #e74c3c;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.delete-modal-warning {
+  font-size: 0.9rem;
+  color: #f39c12;
+  margin: 0;
+  font-style: italic;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 0 2rem 2rem 2rem;
+  border-top: 2px solid rgba(231, 76, 60, 0.3);
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.05), rgba(192, 57, 43, 0.05));
+}
+
+.delete-cancel-button {
+  flex: 1;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+}
+
+.delete-cancel-button:hover:not(:disabled) {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  border-color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.delete-cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.delete-confirm-button {
+  flex: 1;
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 32px rgba(231, 76, 60, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.delete-confirm-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.delete-confirm-button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.delete-confirm-button:hover:not(:disabled) {
+  background: linear-gradient(145deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(231, 76, 60, 0.5);
+}
+
+.delete-confirm-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .delete-modal-content {
+    margin: 0.5rem;
+    max-width: 100%;
+  }
+
+  .delete-modal-header {
+    padding: 1.5rem 1.5rem 0 1.5rem;
+  }
+
+  .delete-modal-body {
+    padding: 1.5rem 1.5rem 1.5rem 1.5rem;
+  }
+
+  .delete-modal-actions {
+    flex-direction: column;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+  }
+
+  .delete-cancel-button,
+  .delete-confirm-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .delete-modal-title {
+    font-size: 1.25rem;
+  }
+
+  .delete-modal-message {
+    font-size: 0.9rem;
+  }
+}
+
+/* Pulsing effect for danger */
+.delete-icon-container {
+  animation: dangerPulse 2s ease-in-out infinite;
+}
+
+@keyframes dangerPulse {
+  0%,
+  100% {
+    box-shadow: 0 8px 32px rgba(231, 76, 60, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(231, 76, 60, 0.6);
+  }
+}

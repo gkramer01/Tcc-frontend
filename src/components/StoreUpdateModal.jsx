@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { X, Save, Loader } from "lucide-react"
 import { StoreService } from "../services/StoreService"
-import { BrandsService } from "../services/BrandService"
 import "../styles/StoreUpdateModal.css"
 
 const paymentConditions = [
@@ -32,13 +31,50 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
   // Initialize form data when store changes
   useEffect(() => {
     if (store && isOpen) {
+      console.log("🔧 Store data for editing:", store)
+      console.log("🔧 Store brands:", store.brands)
+      console.log("🔧 Store paymentConditions:", store.paymentConditions)
+      console.log("🔧 PaymentConditions type:", typeof store.paymentConditions)
+      console.log("🔧 PaymentConditions array:", Array.isArray(store.paymentConditions))
+
+      // Process brands - convert to string IDs
+      const storeBrands = store.brands
+        ? store.brands.map((brand) => {
+            return typeof brand === "object" ? brand.id.toString() : brand.toString()
+          })
+        : []
+
+      // Process payment conditions - they come as enum values (numbers) directly
+      const storePaymentConditions = store.paymentConditions
+        ? store.paymentConditions.map((payment) => {
+            console.log("🔧 Processing payment condition:", payment, "type:", typeof payment)
+
+            // Since PaymentConditions is an enum, it should come as numbers directly
+            // But let's handle different possible cases
+            if (typeof payment === "number") {
+              return payment
+            } else if (typeof payment === "string") {
+              return Number.parseInt(payment)
+            } else if (typeof payment === "object" && payment !== null) {
+              // Fallback for object format (shouldn't happen with enum)
+              return payment.value || payment.id || payment
+            } else {
+              console.warn("🔧 Unknown payment condition format:", payment)
+              return payment
+            }
+          })
+        : []
+
+      console.log("🔧 Processed brands:", storeBrands)
+      console.log("🔧 Processed payment conditions:", storePaymentConditions)
+
       setFormData({
         name: store.name || "",
         address: store.address || "",
         email: store.email || "",
         website: store.website || "",
-        brands: store.brands ? store.brands.map((brand) => brand.id || brand.name) : [],
-        paymentConditions: store.paymentConditions || [],
+        brands: storeBrands,
+        paymentConditions: storePaymentConditions,
       })
       setError("")
       setSuccess("")
@@ -52,7 +88,7 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
         setIsLoadingBrands(true)
         try {
           console.log("🔄 Fetching brands for update modal...")
-          const brandsData = await BrandsService.getBrands()
+          const brandsData = await StoreService.getBrands()
           console.log("📦 Brands data received in modal:", brandsData)
 
           if (brandsData && Array.isArray(brandsData)) {
@@ -80,21 +116,32 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
 
   const handleBrandChange = (e) => {
     const { value, checked } = e.target
+    const brandId = value
+
     setFormData((prev) => ({
       ...prev,
-      brands: checked ? [...prev.brands, value] : prev.brands.filter((id) => id !== value),
+      brands: checked ? [...prev.brands, brandId] : prev.brands.filter((id) => id !== brandId),
     }))
   }
 
   const handlePaymentConditionChange = (e) => {
     const { value, checked } = e.target
     const paymentValue = Number.parseInt(value)
-    setFormData((prev) => ({
-      ...prev,
-      paymentConditions: checked
+
+    console.log("🔧 Payment condition change:", { value, checked, paymentValue })
+    console.log("🔧 Current payment conditions:", formData.paymentConditions)
+
+    setFormData((prev) => {
+      const newPaymentConditions = checked
         ? [...prev.paymentConditions, paymentValue]
-        : prev.paymentConditions.filter((payment) => payment !== paymentValue),
-    }))
+        : prev.paymentConditions.filter((payment) => payment !== paymentValue)
+
+      console.log("🔧 New payment conditions:", newPaymentConditions)
+      return {
+        ...prev,
+        paymentConditions: newPaymentConditions,
+      }
+    })
   }
 
   const validateForm = () => {
@@ -155,16 +202,27 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
     setIsLoading(true)
 
     try {
+      // Format brands as BrandResponse objects
+      const selectedBrands = availableBrands
+        .filter((brand) => formData.brands.includes(brand.id.toString()))
+        .map((brand) => ({
+          id: brand.id,
+          name: brand.name,
+        }))
+
+      // Payment conditions are sent as enum values (numbers)
+      const selectedPaymentConditions = formData.paymentConditions
+
       const updateRequest = {
-        name: formData.name.trim(),
-        address: formData.address.trim() || null,
-        email: formData.email.trim() || null,
-        website: formData.website.trim() || null,
-        latitude: store.latitude,
-        longitude: store.longitude,
-        brands: formData.brands,
-        paymentConditions: formData.paymentConditions,
+        Name: formData.name.trim(),
+        Email: formData.email.trim() || null,
+        Website: formData.website.trim() || null,
+        Address: formData.address.trim() || null,
+        Brands: selectedBrands,
+        PaymentConditions: selectedPaymentConditions,
       }
+
+      console.log("🔄 Sending update request:", updateRequest)
 
       await StoreService.updateStore(store.id, updateRequest)
       setSuccess("Loja atualizada com sucesso!")
@@ -274,8 +332,8 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
                   <label key={brand.id} className="checkbox-label">
                     <input
                       type="checkbox"
-                      value={brand.id}
-                      checked={formData.brands.includes(brand.id)}
+                      value={brand.id.toString()}
+                      checked={formData.brands.includes(brand.id.toString())}
                       onChange={handleBrandChange}
                       disabled={isLoading}
                     />
@@ -291,18 +349,24 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
               Condições de Pagamento <span className="required">*</span>
             </label>
             <div className="checkbox-group">
-              {paymentConditions.map((payment) => (
-                <label key={payment.value} className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    value={payment.value}
-                    checked={formData.paymentConditions.includes(payment.value)}
-                    onChange={handlePaymentConditionChange}
-                    disabled={isLoading}
-                  />
-                  <span className="checkbox-text">{payment.label}</span>
-                </label>
-              ))}
+              {paymentConditions.map((payment) => {
+                const isChecked = formData.paymentConditions.includes(payment.value)
+                console.log(`🔧 Rendering payment ${payment.label} (${payment.value}): checked = ${isChecked}`)
+                console.log(`🔧 formData.paymentConditions contains:`, formData.paymentConditions)
+
+                return (
+                  <label key={payment.value} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      value={payment.value}
+                      checked={isChecked}
+                      onChange={handlePaymentConditionChange}
+                      disabled={isLoading}
+                    />
+                    <span className="checkbox-text">{payment.label}</span>
+                  </label>
+                )
+              })}
             </div>
           </div>
 
