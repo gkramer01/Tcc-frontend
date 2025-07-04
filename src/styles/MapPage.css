@@ -1,13 +1,9 @@
-/* MapPage.css - Diecast Theme */
-
-/* Reset default margins and padding */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Ensure html and body don't cause overflow */
 html,
 body {
   height: 100%;

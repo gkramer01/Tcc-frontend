@@ -16,7 +16,6 @@ export default function ProtectedRoute({ children }) {
         const token = localStorage.getItem("token")
 
         if (!token) {
-          console.log("🔒 No token found, redirecting to login")
           navigate("/login", { replace: true })
           return
         }
@@ -25,7 +24,6 @@ export default function ProtectedRoute({ children }) {
         const isValidToken = await AuthService.EnsureValidToken()
 
         if (!isValidToken) {
-          console.log("🔒 Token validation failed, redirecting to login")
           // Clear invalid tokens
           localStorage.removeItem("token")
           localStorage.removeItem("authToken")
@@ -35,7 +33,6 @@ export default function ProtectedRoute({ children }) {
           return
         }
 
-        console.log("✅ Authentication successful")
         setIsAuthenticated(true)
       } catch (error) {
         console.error("🔒 Authentication check failed:", error)

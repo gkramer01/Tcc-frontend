@@ -95,36 +95,24 @@ export default function LoginPage() {
     setError("")
 
     try {
-      console.log("🔐 Google credential received")
-      console.log("🔐 Credential length:", credentialResponse.credential.length)
-
-      // Extract user info for immediate display (optional)
       const userInfo = extractUserInfoFromCredential(credentialResponse.credential)
-      console.log("👤 Google user info extracted:", userInfo)
 
       // Send the credential directly as IdToken string
       const response = await AuthService.GoogleLogin(credentialResponse.credential)
-      console.log("🔐 AuthService.GoogleLogin response:", response)
 
       if (response.success && response.token) {
-        console.log("✅ Google login successful, navigating to /stores")
 
         // Store the token for backward compatibility
         localStorage.setItem("authToken", response.token)
         localStorage.setItem("token", response.token)
 
-        // User info should already be stored by AuthService.GoogleLogin
-        // But let's ensure we have it as a fallback
         const storedUser = localStorage.getItem("user")
         if (!storedUser && userInfo) {
-          console.log("👤 Storing fallback user info")
           localStorage.setItem("user", JSON.stringify(userInfo))
         }
 
-        // Navigate to stores page instead of map
         navigate("/stores")
       } else {
-        console.log("❌ Google login failed:", response)
         setError(response.message || "Google login failed. Please try again.")
       }
     } catch (error) {
@@ -141,7 +129,7 @@ export default function LoginPage() {
   }
 
   return (
-    <GoogleOAuthProvider clientId="">
+    <GoogleOAuthProvider clientId="851072462108-jpdsukajq1qp8k0nar4ldggb304cc6af.apps.googleusercontent.com">
       <div className="auth-page-container">
         <div className="auth-card">
           <h2 className="auth-title">Faça login na sua conta</h2>

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { Search, X, MapPin } from "lucide-react"
 import { StoreService } from "../services/StoreService"
@@ -14,7 +12,6 @@ export default function StoreSearchBar({ onStoreSelect, onClearSearch }) {
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
 
-  // Debounce search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchTerm.trim().length >= 2) {
@@ -29,7 +26,6 @@ export default function StoreSearchBar({ onStoreSelect, onClearSearch }) {
     return () => clearTimeout(timeoutId)
   }, [searchTerm])
 
-  // Handle clicks outside to close results
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -51,10 +47,11 @@ export default function StoreSearchBar({ onStoreSelect, onClearSearch }) {
     setError("")
 
     try {
-      console.log("🔍 Searching for stores:", term)
-      const results = await StoreService.searchStores(term)
+      // Normalize the search term (trim whitespace, but keep original case for display)
+      const normalizedTerm = term.trim()
 
-      console.log("📦 Search results received:", results)
+      const results = await StoreService.searchStores(normalizedTerm)
+
       setSearchResults(Array.isArray(results) ? results : [])
       setShowResults(true)
     } catch (error) {
@@ -72,7 +69,6 @@ export default function StoreSearchBar({ onStoreSelect, onClearSearch }) {
   }
 
   const handleStoreClick = (store) => {
-    console.log("🎯 Store selected:", store)
     setSearchTerm(store.name)
     setShowResults(false)
     if (onStoreSelect) {

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Save, ArrowLeft, User, Mail, AtSign, Loader } from "lucide-react"
@@ -10,9 +8,9 @@ import "../styles/ProfilePage.css"
 export default function ProfilePage() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    Name: "", // Full name
+    Name: "", 
     Email: "",
-    UserName: "", // Username
+    UserName: "", 
   })
   const [originalData, setOriginalData] = useState({})
   const [isLoading, setIsLoading] = useState(true)
@@ -26,32 +24,27 @@ export default function ProfilePage() {
       setError("")
 
       try {
-        // First, try to get data from localStorage (from JWT token)
         const localUserData = localStorage.getItem("user")
 
         if (localUserData) {
           const parsedUser = JSON.parse(localUserData)
-          console.log("👤 Local user data:", parsedUser)
 
           const userFormData = {
-            Name: parsedUser.name || "", // Full name
+            Name: parsedUser.name || "", 
             Email: parsedUser.email || "",
-            UserName: parsedUser.userName || "", // Username
+            UserName: parsedUser.userName || "", 
           }
 
           setFormData(userFormData)
           setOriginalData(userFormData)
-          console.log("✅ User data loaded from localStorage:", userFormData)
           setIsLoading(false)
           return
         }
 
-        // If no local data, try to extract from token directly
         const token = localStorage.getItem("token")
         if (token) {
           try {
             const payload = JSON.parse(atob(token.split(".")[1]))
-            console.log("🔍 Token payload:", payload)
 
             const tokenData = {
               Name: payload.name || "", // Full name
@@ -61,9 +54,7 @@ export default function ProfilePage() {
 
             setFormData(tokenData)
             setOriginalData(tokenData)
-            console.log("✅ User data loaded from token:", tokenData)
 
-            // Store in localStorage for future use
             const userInfo = {
               name: payload.name,
               userName: payload.userName,
@@ -80,8 +71,6 @@ export default function ProfilePage() {
           }
         }
 
-        // Last resort: try to fetch from backend
-        console.log("🔄 Trying to fetch from backend...")
         const userData = await UserService.getCurrentUser()
 
         const userFormData = {
@@ -92,7 +81,6 @@ export default function ProfilePage() {
 
         setFormData(userFormData)
         setOriginalData(userFormData)
-        console.log("✅ User data loaded from backend:", userFormData)
       } catch (error) {
         console.error("❌ Error loading user data:", error)
         setError("Erro ao carregar dados do usuário. Tente novamente.")
@@ -170,7 +158,6 @@ export default function ProfilePage() {
       setSuccess("Perfil atualizado com sucesso!")
       setOriginalData({ ...formData })
 
-      // Redirect back after a short delay
       setTimeout(() => {
         navigate(-1)
       }, 2000)

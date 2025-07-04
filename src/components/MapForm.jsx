@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-lea
 import { StoreService } from "../services/StoreService"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
+import { Navigate, redirect } from "react-router-dom"
 
 const paymentConditions = [
   { value: 1, label: "Dinheiro", name: "Cash" },
@@ -320,7 +321,7 @@ export default function MapForm() {
         website: formData.website.trim() || null,
         latitude: location.lat,
         longitude: location.lng,
-        brands: formData.brands, // Now sending brand IDs
+        brands: formData.brands,
         paymentConditions: formData.paymentConditions,
       }
 
@@ -471,8 +472,8 @@ export default function MapForm() {
                     <label key={brand.id} className="checkbox-label">
                       <input
                         type="checkbox"
-                        value={brand.id} // Changed to use brand.id instead of brand.name
-                        checked={formData.brands.includes(brand.id)} // Check against brand.id
+                        value={brand.id}
+                        checked={formData.brands.includes(brand.id)}
                         onChange={handleBrandChange}
                         disabled={isLoading}
                       />

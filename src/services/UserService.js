@@ -4,7 +4,6 @@ function getToken() {
   return localStorage.getItem("token")
 }
 
-// Extract user ID from JWT token
 function getUserIdFromToken() {
   const token = getToken()
   if (!token) return null
@@ -26,16 +25,12 @@ export const UserService = {
         throw new Error("User ID not found in token")
       }
 
-      console.log("🔍 Fetching current user data for ID:", userId)
-
-      // Try different possible endpoints
       let response
       try {
         response = await apiRequest(`/user/${userId}`, {
           method: "GET",
         })
       } catch (error) {
-        console.log("❌ /user/{id} failed, trying /users/{id}")
         response = await apiRequest(`/users/${userId}`, {
           method: "GET",
         })
@@ -46,7 +41,6 @@ export const UserService = {
       }
 
       const userData = await response.json()
-      console.log("👤 Current user data received:", userData)
       return userData
     } catch (error) {
       console.error("❌ Error fetching current user:", error)
@@ -61,9 +55,6 @@ export const UserService = {
         throw new Error("User ID not found in token")
       }
 
-      console.log("🔄 Updating user data for ID:", userId, updateData)
-
-      // Try different possible endpoints
       let response
       try {
         response = await apiRequest(`/Users/${userId}`, {
@@ -71,7 +62,6 @@ export const UserService = {
           body: JSON.stringify(updateData),
         })
       } catch (error) {
-        console.log("❌ /user/{id} failed, trying /users/{id}")
         response = await apiRequest(`/users/${userId}`, {
           method: "PUT",
           body: JSON.stringify(updateData),
@@ -85,14 +75,12 @@ export const UserService = {
       }
 
       const result = await response.json()
-      console.log("✅ User updated successfully:", result)
 
-      // Update local storage with new user data - keeping both name and userName separate
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}")
       const updatedUser = {
         ...currentUser,
-        name: updateData.Name, // Full name
-        userName: updateData.UserName, // Username
+        name: updateData.Name, 
+        userName: updateData.UserName, 
         email: updateData.Email,
       }
       localStorage.setItem("user", JSON.stringify(updatedUser))

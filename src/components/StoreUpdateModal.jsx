@@ -28,45 +28,28 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  // Initialize form data when store changes
   useEffect(() => {
     if (store && isOpen) {
-      console.log("🔧 Store data for editing:", store)
-      console.log("🔧 Store brands:", store.brands)
-      console.log("🔧 Store paymentConditions:", store.paymentConditions)
-      console.log("🔧 PaymentConditions type:", typeof store.paymentConditions)
-      console.log("🔧 PaymentConditions array:", Array.isArray(store.paymentConditions))
-
-      // Process brands - convert to string IDs
       const storeBrands = store.brands
         ? store.brands.map((brand) => {
             return typeof brand === "object" ? brand.id.toString() : brand.toString()
           })
         : []
 
-      // Process payment conditions - they come as enum values (numbers) directly
       const storePaymentConditions = store.paymentConditions
         ? store.paymentConditions.map((payment) => {
-            console.log("🔧 Processing payment condition:", payment, "type:", typeof payment)
 
-            // Since PaymentConditions is an enum, it should come as numbers directly
-            // But let's handle different possible cases
             if (typeof payment === "number") {
               return payment
             } else if (typeof payment === "string") {
               return Number.parseInt(payment)
             } else if (typeof payment === "object" && payment !== null) {
-              // Fallback for object format (shouldn't happen with enum)
               return payment.value || payment.id || payment
             } else {
-              console.warn("🔧 Unknown payment condition format:", payment)
               return payment
             }
           })
         : []
-
-      console.log("🔧 Processed brands:", storeBrands)
-      console.log("🔧 Processed payment conditions:", storePaymentConditions)
 
       setFormData({
         name: store.name || "",
@@ -81,20 +64,16 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
     }
   }, [store, isOpen])
 
-  // Fetch available brands
   useEffect(() => {
     if (isOpen) {
       const fetchBrands = async () => {
         setIsLoadingBrands(true)
         try {
-          console.log("🔄 Fetching brands for update modal...")
           const brandsData = await StoreService.getBrands()
-          console.log("📦 Brands data received in modal:", brandsData)
 
           if (brandsData && Array.isArray(brandsData)) {
             setAvailableBrands(brandsData)
           } else {
-            console.error("❌ Invalid brands data:", brandsData)
             setAvailableBrands([])
           }
         } catch (error) {
@@ -128,15 +107,11 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
     const { value, checked } = e.target
     const paymentValue = Number.parseInt(value)
 
-    console.log("🔧 Payment condition change:", { value, checked, paymentValue })
-    console.log("🔧 Current payment conditions:", formData.paymentConditions)
-
     setFormData((prev) => {
       const newPaymentConditions = checked
         ? [...prev.paymentConditions, paymentValue]
         : prev.paymentConditions.filter((payment) => payment !== paymentValue)
 
-      console.log("🔧 New payment conditions:", newPaymentConditions)
       return {
         ...prev,
         paymentConditions: newPaymentConditions,
@@ -210,7 +185,6 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
           name: brand.name,
         }))
 
-      // Payment conditions are sent as enum values (numbers)
       const selectedPaymentConditions = formData.paymentConditions
 
       const updateRequest = {
@@ -222,17 +196,13 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
         PaymentConditions: selectedPaymentConditions,
       }
 
-      console.log("🔄 Sending update request:", updateRequest)
-
       await StoreService.updateStore(store.id, updateRequest)
       setSuccess("Loja atualizada com sucesso!")
 
-      // Call the onUpdate callback to refresh the stores list
       if (onUpdate) {
         onUpdate()
       }
 
-      // Close modal after a short delay
       setTimeout(() => {
         onClose()
       }, 1500)
@@ -351,8 +321,6 @@ export default function StoreUpdateModal({ store, isOpen, onClose, onUpdate }) {
             <div className="checkbox-group">
               {paymentConditions.map((payment) => {
                 const isChecked = formData.paymentConditions.includes(payment.value)
-                console.log(`🔧 Rendering payment ${payment.label} (${payment.value}): checked = ${isChecked}`)
-                console.log(`🔧 formData.paymentConditions contains:`, formData.paymentConditions)
 
                 return (
                   <label key={payment.value} className="checkbox-label">

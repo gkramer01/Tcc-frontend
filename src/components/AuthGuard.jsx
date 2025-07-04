@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AuthService } from "../services/AuthService"
@@ -24,7 +22,6 @@ export function useAuthGuard() {
         const validToken = await AuthService.EnsureValidToken()
 
         if (!validToken) {
-          console.log("Token validation failed, redirecting to login")
           navigate("/login")
           return
         }

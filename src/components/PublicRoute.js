@@ -22,8 +22,6 @@ export default function PublicRoute({ children, redirectTo = "/map" }) {
         const isValidToken = await AuthService.EnsureValidToken()
 
         if (isValidToken) {
-          // User is authenticated, redirect to protected area
-          console.log("✅ User already authenticated, redirecting to", redirectTo)
           navigate(redirectTo, { replace: true })
           return
         } else {
@@ -36,7 +34,6 @@ export default function PublicRoute({ children, redirectTo = "/map" }) {
         }
       } catch (error) {
         console.error("🔒 Authentication check failed:", error)
-        // Clear tokens on error and show public page
         localStorage.removeItem("token")
         localStorage.removeItem("authToken")
         localStorage.removeItem("refreshToken")

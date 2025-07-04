@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import { Edit, MapPin, Trash2 } from "lucide-react"
@@ -17,7 +15,6 @@ function MapController({ center, zoom }) {
 
   useEffect(() => {
     if (center) {
-      console.log("🎯 Centering map on:", center, "with zoom:", zoom)
       map.setView(center, zoom || 13)
     }
   }, [map, center, zoom])
@@ -25,29 +22,24 @@ function MapController({ center, zoom }) {
   return null
 }
 
-// Component to get user location and center map
 function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
   const map = useMap()
   const [locationAttempted, setLocationAttempted] = useState(false)
 
   useEffect(() => {
     if ("geolocation" in navigator && !locationAttempted) {
-      console.log("🌍 Attempting to get user location with maximum precision...")
       setLocationAttempted(true)
 
-      // Multiple attempts with different configurations for better accuracy
       const attemptHighAccuracyLocation = () => {
         const highAccuracyOptions = {
           enableHighAccuracy: true,
-          timeout: 45000, // Increased timeout to 45 seconds
-          maximumAge: 0, // Always get fresh location
+          timeout: 45000, 
+          maximumAge: 0, 
         }
 
-        console.log("🎯 Attempting high accuracy GPS location...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords
-            console.log(`🌍 High accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
             const userLocation = [latitude, longitude]
 
@@ -67,7 +59,6 @@ function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
                 zoomLevel = 12 // Reduced from 15
               }
 
-              console.log(`🎯 Centering map on user location with zoom ${zoomLevel} (accuracy: ${accuracy}m)`)
               map.setView(userLocation, zoomLevel)
             }
 
@@ -78,7 +69,6 @@ function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
           (error) => {
             console.error("🌍 High accuracy location failed:", error.message, "Code:", error.code)
 
-            // Try with medium accuracy settings
             attemptMediumAccuracyLocation()
           },
           highAccuracyOptions,
@@ -89,14 +79,12 @@ function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
         const mediumAccuracyOptions = {
           enableHighAccuracy: true,
           timeout: 30000,
-          maximumAge: 30000, // Allow 30 second old location
+          maximumAge: 30000,
         }
 
-        console.log("🎯 Attempting medium accuracy location...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords
-            console.log(`🌍 Medium accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
             const userLocation = [latitude, longitude]
 
@@ -119,7 +107,6 @@ function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
           (error) => {
             console.error("🌍 Medium accuracy location failed:", error.message)
 
-            // Final attempt with basic settings
             attemptBasicLocation()
           },
           mediumAccuracyOptions,
@@ -130,14 +117,12 @@ function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
         const basicOptions = {
           enableHighAccuracy: false,
           timeout: 15000,
-          maximumAge: 300000, // Allow 5 minute old location
+          maximumAge: 300000,
         }
 
-        console.log("🎯 Attempting basic location (network-based)...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords
-            console.log(`🌍 Basic location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
             const userLocation = [latitude, longitude]
 
@@ -188,7 +173,6 @@ function UserLocationFinder({ onLocationFound, shouldCenter = true }) {
       // Start with the highest accuracy attempt
       attemptHighAccuracyLocation()
     } else if (!navigator.geolocation) {
-      console.log("🌍 Geolocation not available in this browser")
       if (onLocationFound) {
         onLocationFound(null, "Geolocalização não disponível neste navegador")
       }
@@ -211,7 +195,6 @@ function UserLocationMarker({ userLocation }) {
 
   if (!userLocation) return null
 
-  // Format accuracy for better display
   const formatAccuracy = (accuracy) => {
     if (accuracy < 1000) {
       return `~${Math.round(accuracy)}m`
@@ -220,7 +203,6 @@ function UserLocationMarker({ userLocation }) {
     }
   }
 
-  // Get accuracy quality description
   const getAccuracyQuality = (accuracy) => {
     if (accuracy <= 10) return "Excelente"
     if (accuracy <= 50) return "Boa"
@@ -276,8 +258,8 @@ export default function StoresMapPage() {
   const [stores, setStores] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
-  const [mapCenter, setMapCenter] = useState([-23.55052, -46.633308]) // Default to São Paulo
-  const [mapZoom, setMapZoom] = useState(11) // Reduced default zoom
+  const [mapCenter, setMapCenter] = useState([-23.55052, -46.633308]) 
+  const [mapZoom, setMapZoom] = useState(11) 
   const [selectedStore, setSelectedStore] = useState(null)
   const [storeToDelete, setStoreToDelete] = useState(null)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
@@ -288,7 +270,6 @@ export default function StoresMapPage() {
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const [shouldCenterOnUser, setShouldCenterOnUser] = useState(true)
 
-  // Custom marker icons
   const storeIcon = new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
     iconSize: [25, 41],
@@ -312,9 +293,7 @@ export default function StoresMapPage() {
     setError("")
 
     try {
-      console.log("🔄 Fetching stores...")
       const storesData = await StoreService.getStores()
-      console.log("📦 Stores data received:", storesData)
 
       if (Array.isArray(storesData)) {
         setStores(storesData)
@@ -334,7 +313,6 @@ export default function StoresMapPage() {
       setStores([])
     } finally {
       setIsLoading(false)
-      console.log("🏁 Finished loading stores")
     }
   }
 
@@ -346,7 +324,6 @@ export default function StoresMapPage() {
     setIsGettingLocation(false)
 
     if (location) {
-      console.log("📍 Location found:", location)
       setUserLocation(location)
       setLocationError("")
 
@@ -377,7 +354,6 @@ export default function StoresMapPage() {
   }
 
   const handleLocationRequest = () => {
-    console.log("🔄 Manual location request with maximum precision")
     setIsGettingLocation(true)
     setLocationError("")
     setShouldCenterOnUser(true)
@@ -387,15 +363,13 @@ export default function StoresMapPage() {
       const attemptHighAccuracyLocation = () => {
         const highAccuracyOptions = {
           enableHighAccuracy: true,
-          timeout: 45000, // Increased timeout
-          maximumAge: 0, // Always get fresh location
+          timeout: 45000, 
+          maximumAge: 0, 
         }
 
-        console.log("🎯 Manual high accuracy GPS location...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords
-            console.log(`🌍 Manual high accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
             const location = { lat: latitude, lng: longitude, accuracy }
             setUserLocation(location)
@@ -423,7 +397,6 @@ export default function StoresMapPage() {
           (error) => {
             console.error("🌍 Manual high accuracy location failed:", error)
 
-            // Fallback attempt with medium accuracy
             const mediumAccuracyOptions = {
               enableHighAccuracy: true,
               timeout: 20000,
@@ -433,7 +406,6 @@ export default function StoresMapPage() {
             navigator.geolocation.getCurrentPosition(
               (position) => {
                 const { latitude, longitude, accuracy } = position.coords
-                console.log(`🌍 Manual medium accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
                 const location = { lat: latitude, lng: longitude, accuracy }
                 setUserLocation(location)
@@ -478,7 +450,6 @@ export default function StoresMapPage() {
     }
   }
 
-  // Format brands list for display
   const formatBrands = (brands) => {
     if (!brands || !Array.isArray(brands) || brands.length === 0) {
       return "Nenhuma marca informada"
@@ -487,13 +458,11 @@ export default function StoresMapPage() {
   }
 
   const handleEditStore = (store) => {
-    console.log("🔧 Opening edit modal for store:", store)
     setSelectedStore(store)
     setIsUpdateModalOpen(true)
   }
 
   const handleDeleteStore = (store) => {
-    console.log("🗑️ Opening delete modal for store:", store)
     setStoreToDelete(store)
     setIsDeleteModalOpen(true)
   }
@@ -513,17 +482,13 @@ export default function StoresMapPage() {
 
     try {
       await StoreService.deleteStore(storeToDelete.id)
-      console.log("✅ Store deleted successfully")
 
-      // Refresh the stores list
       await fetchStores()
 
-      // Close the modal
       handleCloseDeleteModal()
     } catch (error) {
       console.error("❌ Error deleting store:", error)
-      // You could show an error toast here
-      throw error // Re-throw to let the modal handle the error state
+      throw error 
     }
   }
 
@@ -532,13 +497,11 @@ export default function StoresMapPage() {
   }
 
   const handleStoreSelect = (store) => {
-    console.log("🎯 Store selected from search:", store)
-    setShouldCenterOnUser(false) // Don't auto-center on user when selecting a store
+    setShouldCenterOnUser(false) 
     setMapCenter([store.latitude, store.longitude])
-    setMapZoom(15) // Reduced from 18
+    setMapZoom(15) 
     setHighlightedStore(store.id || store.name)
 
-    // Clear highlight after 3 seconds
     setTimeout(() => {
       setHighlightedStore(null)
     }, 3000)
@@ -546,7 +509,6 @@ export default function StoresMapPage() {
 
   const handleClearSearch = () => {
     setHighlightedStore(null)
-    // Reset to user location if available, otherwise first store
     if (userLocation) {
       let zoomLevel = 14
       if (userLocation.accuracy <= 10) {
@@ -567,7 +529,7 @@ export default function StoresMapPage() {
       setShouldCenterOnUser(true)
     } else if (stores.length > 0) {
       setMapCenter([stores[0].latitude, stores[0].longitude])
-      setMapZoom(13) // Reduced from 16
+      setMapZoom(13) 
     }
   }
 

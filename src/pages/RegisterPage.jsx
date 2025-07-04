@@ -49,7 +49,6 @@ export default function RegisterPage() {
       const response = await AuthService.Register(user)
 
       if (response.success) {
-        console.log("Registration successful:", response)
         navigate("/login")
       } else {
         setError(response.message || "Registration failed. Please try again.")

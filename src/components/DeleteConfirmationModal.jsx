@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { X, Trash2, Loader } from "lucide-react"
 import "../styles/DeleteConfirmationModal.css"

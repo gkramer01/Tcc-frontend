@@ -2,57 +2,75 @@ import { AuthService } from "./AuthService"
 
 const API_URL = "https://localhost:7240/api"
 
-// API request with automatic token refresh
 export const apiRequest = async (endpoint, options = {}) => {
-  // First, ensure we have a valid token
+
   const isAuthenticated = await AuthService.EnsureValidToken()
 
   if (!isAuthenticated && options.requiresAuth !== false) {
+    console.error("❌ Authentication required but no valid token available")
     throw new Error("Authentication required")
   }
 
-  // Get fresh headers with the current token
   const token = localStorage.getItem("token")
   const headers = {
     "Content-Type": "application/json",
+    Accept: "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   }
 
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    })
+  const requestOptions = {
+    mode: "cors",
+    credentials: "include",
+    ...options,
+    headers,
+  }
 
-    // If unauthorized and we have a refresh token, try to refresh and retry
+  try {
+    let response = await fetch(`${API_URL}${endpoint}`, requestOptions)
+
+
+    // If we get a CORS error or connection error, try HTTP fallback
+    if (!response.ok && response.status === 0) {
+      const httpUrl = API_URL.replace("https://", "http://").replace(":7240", ":7240")
+
+      try {
+        response = await fetch(`${httpUrl}${endpoint}`, requestOptions)
+      } catch (httpError) {
+        console.error("❌ HTTP fallback also failed:", httpError)
+        throw new Error("Erro de conexão com o servidor. Verifique se o backend está rodando.")
+      }
+    }
+
     if (response.status === 401 && localStorage.getItem("refreshToken")) {
-      console.log("401 Unauthorized response, attempting token refresh...")
       const refreshed = await AuthService.RefreshToken()
 
       if (refreshed) {
-        // Retry the request with the new token
         const newToken = localStorage.getItem("token")
         const newHeaders = {
           "Content-Type": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${newToken}`,
           ...options.headers,
         }
 
         return fetch(`${API_URL}${endpoint}`, {
-          ...options,
+          ...requestOptions,
           headers: newHeaders,
         })
       } else {
-        // If refresh failed, throw error
-        console.log("Token refresh failed")
         throw new Error("Sessão expirada. Por favor, faça login novamente.")
       }
     }
 
     return response
   } catch (error) {
-    console.error("API request error:", error)
+    console.error("❌ API request error:", error)
+
+    if (error.message.includes("CORS") || error.message.includes("fetch") || error.name === "TypeError") {
+      throw new Error("Erro de conexão com o servidor. Verifique se o backend está rodando e configurado corretamente.")
+    }
+
     throw error
   }
 }
