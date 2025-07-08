@@ -31,7 +31,6 @@ function LocationFinder({ setUserLocation }) {
           maximumAge: 0, // Always get fresh location
         }
 
-        console.log("🎯 Attempting high accuracy GPS location...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords
@@ -75,11 +74,9 @@ function LocationFinder({ setUserLocation }) {
           maximumAge: 30000, // Allow 30 second old location
         }
 
-        console.log("🎯 Attempting medium accuracy location...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords
-            console.log(`🌍 Medium accuracy location: ${latitude}, ${longitude} (accuracy: ${accuracy}m)`)
 
             const userLocation = { lat: latitude, lng: longitude }
             setUserLocation(userLocation)
@@ -111,7 +108,6 @@ function LocationFinder({ setUserLocation }) {
           maximumAge: 300000, // Allow 5 minute old location
         }
 
-        console.log("🎯 Attempting basic location (network-based)...")
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude, accuracy } = position.coords

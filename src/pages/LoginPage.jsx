@@ -35,11 +35,9 @@ export default function LoginPage() {
         password: formData.password,
       }
 
-      console.log("🔐 Attempting login with:", { username: user.username })
       const response = await AuthService.Login(user)
 
       if (response.success || response.token) {
-        console.log("✅ Login successful:", response)
 
         // Additional token storage for backward compatibility
         if (response.token) {
@@ -60,7 +58,6 @@ export default function LoginPage() {
 
             if (userInfo.name || userInfo.userName || userInfo.email) {
               localStorage.setItem("user", JSON.stringify(userInfo))
-              console.log("👤 User info stored immediately after login:", userInfo)
 
               // Force multiple user data update events
               window.dispatchEvent(new CustomEvent("userDataUpdated"))
@@ -72,7 +69,6 @@ export default function LoginPage() {
           }
         }
 
-        // Navigate to stores page instead of map
         navigate("/stores")
       } else {
         setError(response.message || "Login failed. Please check your credentials.")
@@ -97,12 +93,10 @@ export default function LoginPage() {
     try {
       const userInfo = extractUserInfoFromCredential(credentialResponse.credential)
 
-      // Send the credential directly as IdToken string
       const response = await AuthService.GoogleLogin(credentialResponse.credential)
 
       if (response.success && response.token) {
 
-        // Store the token for backward compatibility
         localStorage.setItem("authToken", response.token)
         localStorage.setItem("token", response.token)
 

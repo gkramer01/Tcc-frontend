@@ -46,13 +46,10 @@ export default function RegisterPage() {
         password: formData.password,
       }
 
-      const response = await AuthService.Register(user)
+      await AuthService.Register(user)
 
-      if (response.success) {
-        navigate("/login")
-      } else {
-        setError(response.message || "Registration failed. Please try again.")
-      }
+      navigate("/login")
+
     } catch (error) {
       console.error("Registration error:", error)
       setError("An error occurred during registration. Please try again.")

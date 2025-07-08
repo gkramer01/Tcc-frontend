@@ -1,9 +1,11 @@
 import { AuthService } from "./AuthService"
+import { connectionManager } from "./ConnectionManager"
 
-const API_URL = "https://localhost:7240/api"
-
+// Enhanced API request usando o ConnectionManager
 export const apiRequest = async (endpoint, options = {}) => {
+  console.log(`🌐 Making API request to: ${endpoint}`)
 
+  // First, ensure we have a valid token
   const isAuthenticated = await AuthService.EnsureValidToken()
 
   if (!isAuthenticated && options.requiresAuth !== false) {
@@ -11,6 +13,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     throw new Error("Authentication required")
   }
 
+  // Get fresh headers with the current token
   const token = localStorage.getItem("token")
   const headers = {
     "Content-Type": "application/json",
@@ -19,43 +22,33 @@ export const apiRequest = async (endpoint, options = {}) => {
     ...options.headers,
   }
 
-  const requestOptions = {
-    mode: "cors",
-    credentials: "include",
-    ...options,
-    headers,
-  }
+  console.log("🔑 Request headers:", {
+    ...headers,
+    Authorization: token ? `Bearer ${token.substring(0, 20)}...` : "No token",
+  })
 
   try {
-    let response = await fetch(`${API_URL}${endpoint}`, requestOptions)
+    const response = await connectionManager.makeRequest(endpoint, {
+      ...options,
+      headers,
+    })
 
-
-    // If we get a CORS error or connection error, try HTTP fallback
-    if (!response.ok && response.status === 0) {
-      const httpUrl = API_URL.replace("https://", "http://").replace(":7240", ":7240")
-
-      try {
-        response = await fetch(`${httpUrl}${endpoint}`, requestOptions)
-      } catch (httpError) {
-        console.error("❌ HTTP fallback also failed:", httpError)
-        throw new Error("Erro de conexão com o servidor. Verifique se o backend está rodando.")
-      }
-    }
-
+    // Handle authentication responses
     if (response.status === 401 && localStorage.getItem("refreshToken")) {
+      console.log("401 Unauthorized response, attempting token refresh...")
       const refreshed = await AuthService.RefreshToken()
 
       if (refreshed) {
+        // Retry the request with the new token
         const newToken = localStorage.getItem("token")
         const newHeaders = {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+          ...headers,
           Authorization: `Bearer ${newToken}`,
-          ...options.headers,
         }
 
-        return fetch(`${API_URL}${endpoint}`, {
-          ...requestOptions,
+        console.log("🔄 Retrying request with refreshed token")
+        return connectionManager.makeRequest(endpoint, {
+          ...options,
           headers: newHeaders,
         })
       } else {
@@ -67,10 +60,23 @@ export const apiRequest = async (endpoint, options = {}) => {
   } catch (error) {
     console.error("❌ API request error:", error)
 
-    if (error.message.includes("CORS") || error.message.includes("fetch") || error.name === "TypeError") {
-      throw new Error("Erro de conexão com o servidor. Verifique se o backend está rodando e configurado corretamente.")
+    // Provide helpful error messages
+    if (error.message.includes("internet")) {
+      throw new Error("Sem conexão com a internet. Verifique sua conexão.")
+    } else if (error.message.includes("servidor")) {
+      throw new Error("Erro de conexão com o servidor. Tente novamente em alguns segundos.")
     }
 
     throw error
   }
+}
+
+// Function to get connection status
+export const getConnectionStatus = () => {
+  return connectionManager.getConnectionStatus()
+}
+
+// Function to force connection test
+export const testConnection = () => {
+  return connectionManager.testConnection()
 }
